@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrollytelling Template</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Header Section */
+        .header {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 800px;
+            padding: 0 20px;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollytelling Container */
+        .scrolly-container {
+            position: relative;
+            padding: 100px 0;
+        }
+
+        /* Fixed Visual Area */
+        .visual-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        .visual-content {
+            width: 600px;
+            height: 400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .visual-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 2rem;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .visual-item.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .visual-item:nth-child(1) { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .visual-item:nth-child(2) { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .visual-item:nth-child(3) { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+        .visual-item:nth-child(4) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+
+        /* Story Steps */
+        .story-container {
+            position: relative;
+            z-index: 10;
+        }
+
+        .story-step {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+            margin-bottom: 100px;
+        }
+
+        .story-content {
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.6s ease-out;
+        }
+
+        .story-step:nth-child(even) .story-content {
+            margin-left: auto;
+            transform: translateX(50px);
+        }
+
+        .story-content.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .story-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .story-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Navigation Dots */
+        .nav-dots {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.3);
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #667eea;
+            transform: scale(1.3);
+        }
+
+        /* Footer */
+        .footer {
+            height: 100vh;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .footer-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .footer-content p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5rem; }
+            .header p { font-size: 1.1rem; }
+            .visual-content { width: 90%; height: 300px; }
+            .story-step { padding: 0 20px; }
+            .story-content { padding: 30px; }
+            .story-content h2 { font-size: 1.5rem; }
+            .nav-dots { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
+
+    <!-- Navigation Dots -->
+    <div class="nav-dots">
+        <div class="nav-dot active" data-step="0"></div>
+        <div class="nav-dot" data-step="1"></div>
+        <div class="nav-dot" data-step="2"></div>
+        <div class="nav-dot" data-step="3"></div>
+    </div>
+
+    <!-- Header -->
+    <section class="header">
+        <div class="header-content">
+            <h1>Your Story Begins</h1>
+            <p>Scroll down to discover an interactive narrative experience</p>
+        </div>
+    </section>
+
+    <!-- Scrollytelling Section -->
+    <section class="scrolly-container">
+        <!-- Fixed Visual -->
+        <div class="visual-container">
+            <div class="visual-content">
+                <div class="visual-item active">
+                    <div>
+                        <h3>Chapter 1</h3>
+                        <p>The Beginning</p>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <div>
+                        <h3>Chapter 2</h3>
+                        <p>The Journey</p>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <div>
+                        <h3>Chapter 3</h3>
+                        <p>The Discovery</p>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <div>
+                        <h3>Chapter 4</h3>
+                        <p>The Resolution</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Steps -->
+        <div class="story-container">
+            <div class="story-step">
+                <div class="story-content">
+                    <h2>The Beginning</h2>
+                    <p>Every great story starts with a single step. This is where our journey begins, setting the stage for everything that follows.</p>
+                    <p>As you scroll through this narrative, watch how the visual elements change and respond to your progress, creating an immersive storytelling experience.</p>
+                </div>
+            </div>
+
+            <div class="story-step">
+                <div class="story-content">
+                    <h2>The Journey Unfolds</h2>
+                    <p>Now we're moving deeper into the narrative. The visual transforms as we progress, reflecting the evolving nature of our story.</p>
+                    <p>This technique, called scrollytelling, combines traditional storytelling with interactive web design to create engaging, memorable experiences.</p>
+                </div>
+            </div>
+
+            <div class="story-step">
+                <div class="story-content">
+                    <h2>A Moment of Discovery</h2>
+                    <p>Here's where the plot thickens. We've reached a crucial turning point in our narrative, and the visual reflects this dramatic shift.</p>
+                    <p>Notice how the colors and content change to match the emotional tone of this section of the story.</p>
+                </div>
+            </div>
+
+            <div class="story-step">
+                <div class="story-content">
+                    <h2>The Resolution</h2>
+                    <p>As we reach the climax of our story, everything comes together. The visual elements reach their final form, representing the completion of our journey.</p>
+                    <p>This template provides a foundation you can customize with your own content, visuals, and interactive elements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <section class="footer">
+        <div class="footer-content">
+            <h2>The End... or is it?</h2>
+            <p>Use this template as a starting point for your own scrollytelling adventures</p>
+        </div>
+    </section>
+
+    <script>
+        // Scrollytelling Logic
+        class ScrollyTelling {
+            constructor() {
+                this.steps = document.querySelectorAll('.story-step');
+                this.visualItems = document.querySelectorAll('.visual-item');
+                this.navDots = document.querySelectorAll('.nav-dot');
+                this.progressFill = document.querySelector('.progress-fill');
+                this.currentStep = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.updateProgress();
+                this.checkSteps();
+            }
+
+            bindEvents() {
+                window.addEventListener('scroll', this.throttle(this.onScroll.bind(this), 16));
+                window.addEventListener('resize', this.throttle(this.onResize.bind(this), 250));
+                
+                // Navigation dots
+                this.navDots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => {
+                        this.scrollToStep(index);
+                    });
+                });
+            }
+
+            onScroll() {
+                this.updateProgress();
+                this.checkSteps();
+            }
+
+            onResize() {
+                this.checkSteps();
+            }
+
+            updateProgress() {
+                const scrolled = window.pageYOffset;
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = (scrolled / maxScroll) * 100;
+                this.progressFill.style.width = `${Math.min(progress, 100)}%`;
+            }
+
+            checkSteps() {
+                const scrolled = window.pageYOffset;
+                const windowHeight = window.innerHeight;
+                
+                this.steps.forEach((step, index) => {
+                    const rect = step.getBoundingClientRect();
+                    const stepTop = scrolled + rect.top;
+                    const stepBottom = stepTop + rect.height;
+                    const triggerPoint = scrolled + windowHeight * 0.6;
+                    
+                    // Show/hide story content
+                    const content = step.querySelector('.story-content');
+                    if (triggerPoint >= stepTop && triggerPoint <= stepBottom) {
+                        content.classList.add('visible');
+                        this.setActiveStep(index);
+                    }
+                });
+            }
+
+            setActiveStep(index) {
+                if (this.currentStep !== index) {
+                    this.currentStep = index;
+                    
+                    // Update visual items
+                    this.visualItems.forEach((item, i) => {
+                        item.classList.toggle('active', i === index);
+                    });
+                    
+                    // Update navigation dots
+                    this.navDots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === index);
+                    });
+                }
+            }
+
+            scrollToStep(index) {
+                const step = this.steps[index];
+                if (step) {
+                    const offsetTop = step.offsetTop - window.innerHeight * 0.4;
+                    window.scrollTo({
+                        top: offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+
+            throttle(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                }
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ScrollyTelling();
+        });
+
+        // Smooth scroll behavior for better UX
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
