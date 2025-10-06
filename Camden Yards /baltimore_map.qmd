@@ -1,0 +1,69 @@
+---
+title: "baltimore map"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(geojsonio)
+library(leaflet)
+```
+```{r}
+baltimore_map <- st_read("baltimore_map.geojson")
+st_geometry_type(baltimore_map)
+```
+
+```{r}
+# Separate points and polygons
+points <- baltimore_map %>% filter(st_geometry_type(geometry) %in% c("POINT", "MULTIPOINT"))
+polys  <- baltimore_map %>% filter(st_geometry_type(geometry) %in% c("POLYGON", "MULTIPOLYGON"))
+
+# Create a vector of colors (one for each polygon)
+my_colors[1] <- "red"      # First polygon red
+my_colors[2] <- "red"   # Second polygon orange
+my_colors[3] <- "yellow"     # Third polygon blue
+my_colors[4] <- "yellow"   # Fourth polygon yellow
+my_colors[5] <- "yellow"    # Fifth polygon green
+my_colors[6] <- "yellow"   # Sixth polygon purple
+
+polys$color <- my_colors
+
+leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(data = points, radius = 5, color = "blue") %>%
+  addPolygons(data = polys, fillColor = ~color, weight = 1, color = "black", fillOpacity = 0.5)
+```
+
+
+```{r}
+# Read your second GeoJSON file
+overlay_map <- st_read("baltimore_csa.geojson")  # Replace with your actual filename
+
+# Check what geometry types it contains
+st_geometry_type(overlay_map)
+```
+
+```{r}
+# Separate geometry types from the overlay file (if needed)
+overlay_points <- overlay_map %>% filter(st_geometry_type(geometry) %in% c("POINT", "MULTIPOINT"))
+overlay_polys  <- overlay_map %>% filter(st_geometry_type(geometry) %in% c("POLYGON", "MULTIPOLYGON"))
+overlay_lines  <- overlay_map %>% filter(st_geometry_type(geometry) %in% c("LINESTRING", "MULTILINESTRING"))
+
+# Add all layers to your map
+leaflet() %>%
+  addTiles() %>%
+  # Original layers
+  addCircleMarkers(data = points, radius = 5, color = "blue", group = "Original Points") %>%
+  addPolygons(data = polys, fillColor = "red", weight = 1, color = "black", 
+              fillOpacity = 0.5, group = "Original Polygons") %>%
+  # Overlay layers
+  addCircleMarkers(data = overlay_points, radius = 3, color = "orange", 
+                   group = "Overlay Points") %>%
+  addPolygons(data = overlay_polys, fillColor = "green", weight = 2, 
+              color = "darkgreen", fillOpacity = 0.3, group = "Overlay Polygons") %>%
+  addPolylines(data = overlay_lines, color = "purple", weight = 2, 
+               group = "Overlay Lines")
+```
+

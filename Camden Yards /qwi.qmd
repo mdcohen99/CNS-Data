@@ -1,0 +1,33 @@
+---
+title: "qwi data"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+qwi_data <- read_csv("qwi2.csv") |> clean_names()
+```
+
+```{r}
+qwi_data |> 
+  ggplot(aes(x = x1, y = beginning_of_quarter_employment_counts)) +
+  geom_line() + 
+  labs(title = "Quarterly employment in Baltimore declines since 1990", x = "Year", y = "Employment Counts", subtitle = "Since 1991, total reported employment at the beginning of each quarter has dropped by more than 75% — and hardly rebounded since the COVID-19 pandemic — according to Census data.", caption = "Source: United States Census Bureau") +
+  theme_minimal() 
+```
+
+
+
+
+
+
+
+
+
+
+

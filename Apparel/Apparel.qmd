@@ -1,0 +1,27 @@
+---
+title: "Apparel Spreadsheet"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+apparel_data <- read_csv("apparel.csv")
+```
+
+```{r}
+apparel_data <- apparel_data |> 
+  mutate(
+    Sponsor = case_when(
+      Team %in% c("California", "Clemson", "Florida St.", "Pittsburgh", "SMU", "Stanford", "Syracuse", "Virginia", "Virginia Tech", "Wake Forest", "Arizona", "Baylor", "BYU", "Cincinnati", "Colorado", "Houston", "Iowa St.", "Kansas St.", "Oklahoma St.", "TCU", "UCF", "West Virginia", "Illinois", "Iowa","Michigan St.", "Minnesota", "Ohio St.", "Oregon", "Penn St.", "Purdue", "USC", "Alabama", "Auburn", "Arkansas", "Georgia", "LSU", "Ole Miss", "Missouri", "Tennessee", "Texas", "Vanderbilt") ~ "Nike",
+      Team %in% c("school 4", "school 5") ~ "Adidas",
+      Team %in% c("school 4", "school 5") ~ "Under Armour",
+      Team %in% c("school 4", "school 5") ~ "New Balance",
+      Team %in% c("Michigan", "North Carolina", "UCLA") ~ "Jordan",
+      TRUE ~ Sponsor   # keep existing values if none of the above match
+    )
+  )
+```

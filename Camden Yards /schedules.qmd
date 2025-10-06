@@ -1,0 +1,109 @@
+---
+title: "Schedule Graphic"
+format: html
+editor: visual
+---
+
+```{r}
+library(RSelenium)
+library(rvest)
+library(dplyr)
+library(lubridate)
+library(stringr)
+library(tibble)
+```
+
+
+```{r}
+# Pick the year
+year <- 2025
+
+# Create sequence of all days in that year
+dates <- seq(ymd(paste0(year, "-01-01")), 
+             ymd(paste0(year, "-12-31")), 
+             by = "day")
+```
+
+
+```{r}
+# Put into a dataframe
+df <- tibble(date = dates)
+
+df <- df |> 
+  mutate(
+    year = year(date),
+    month = month(date, label = TRUE),
+    day = day(date),
+    weekday = wday(date, label = TRUE)
+  )
+```
+
+
+```{r}
+df <- df |> 
+  mutate(
+    `Camden Yards` = NA,
+    `M&T Bank Stadium` = NA,
+    `Baltimore Convention Center` = NA
+  )
+```
+
+
+```{r}
+# --- 1. Launch Selenium ----
+# This will try to start a browser (default: Chrome)
+rD <- rsDriver(browser = "chrome", port = 4545L)
+remDr <- rD$client
+
+# --- 2. Navigate to events page ----
+remDr$navigate("https://www.bccenter.org/events")
+
+# Let JS load
+Sys.sleep(5)
+
+# --- 3. Extract page source ----
+page_source <- remDr$getPageSource()[[1]]
+page <- read_html(page_source)
+
+# --- 4. Inspect & scrape event data ----
+# (The exact CSS selectors may need adjustment after inspecting the page structure)
+events <- page %>%
+  html_elements(".event-listing") # replace with correct CSS class
+# Try .event, .event-title, or similar if above doesn’t match
+
+event_data <- tibble(
+  title = events %>% html_element(".event-title") %>% html_text2(),
+  date  = events %>% html_element(".event-date") %>% html_text2()
+)
+
+# --- 5. Clean/parse dates ----
+# Adjust depending on how the dates are displayed
+event_data <- event_data %>%
+  mutate(
+    date = mdy(date)  # change to dmy() if format differs
+  ) %>%
+  filter(year(date) == 2024)
+
+# --- 6. Make your daily calendar for 2024 ----
+calendar_2024 <- tibble(
+  date = seq(ymd("2024-01-01"), ymd("2024-12-31"), by = "day")
+)
+
+# --- 7. Join with event data ----
+calendar_2024 <- calendar_2024 %>%
+  mutate(`Baltimore Convention Center` = if_else(date %in% event_data$date, 1, 0))
+
+# --- 8. Done! ----
+head(calendar_2024, 20)
+
+# --- 9. Close Selenium when finished ----
+remDr$close()
+rD$server$stop()
+```
+
+
+
+
+
+
+

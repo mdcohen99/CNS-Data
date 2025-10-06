@@ -1,0 +1,75 @@
+---
+title: "gov shutdown data"
+format: html
+editor: visual
+---
+
+```{r}
+# Load library
+library(tidyverse)
+library(googlesheets4) 
+library(janitor)
+library(paletteer)
+library(showtext)
+font_add_google("Montserrat")
+showtext_auto()
+```
+
+
+```{r}
+furlough_data <- read_csv("furlough_chart.csv") |> clean_names()
+```
+
+
+```{r}
+# Get % furloughed
+furlough_data <- furlough_data |>
+  mutate(
+    Percent_Furloughed = furloughed_employees / total_employees * 100,
+    Percent_Working = 100 - Percent_Furloughed
+  )
+
+# Pivot
+furlough_long <- furlough_data |>
+  select(department, Percent_Furloughed, Percent_Working) |>
+  pivot_longer(cols = c(Percent_Furloughed, Percent_Working),
+               names_to = "Status", values_to = "Percent")
+
+dept_order <- furlough_data |>
+  arrange(Percent_Furloughed) |>
+  pull(department)
+
+furlough_long <- furlough_long |>
+  mutate(department = factor(department, levels = dept_order))
+
+# Lets make a chart! 
+ggplot(furlough_long, aes(x = department, y = Percent, fill = Status)) +
+  geom_col(width = 0.8) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("Percent_Furloughed" = "#881C00FF", "Percent_Working" = "grey90"),
+    labels = c("Furloughed", "Working")
+  ) +
+  labs(
+    title = "Two of Trump administration's biggest targets — EPA, Education — see largest furlough rates in shutdown",
+    subtitle = "President Trump promised sweeping layoffs of federal workers with a government shutdown. Though that appears not to have happened, no previous shutdown has seen as many furloughed workers as October's ongoing one.",
+    x = "Department",
+    y = "Percent of Total Employees",
+    caption = "Source: Contingency plans released by each deparment for the government shutdown, The New York Times | Chart by Matt Cohen",
+    fill = ""
+  ) +
+  theme_minimal(base_size = 14) +
+  theme( plot.margin = margin(t = 20, r = 20, b = 20, l = 20, unit = "pt"),
+    axis.title = element_text(size = 6, family = "Montserrat", face = "bold"),
+        axis.text = element_text(size = 6, family = "Montserrat", face = "plain"),
+    title = element_text(size = 13, family = "Montserrat", face="bold"),
+    plot.subtitle = element_text(family = "Montserrat", size = 9, face = "plain"),
+    plot.caption = element_text(family = "Montserrat", size = 8, face = "italic"),
+    legend.position = "top",
+    legend.box = "horizontal",
+    legend.text = element_text(size = 6, family = "Montserrat", face = "plain"), #the margin brings the text and dot closer
+    panel.grid.major = element_blank(),
+    panel.grid.minor.x = element_blank()
+  ) 
+```
+
