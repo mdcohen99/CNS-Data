@@ -67,7 +67,7 @@ ggplot(furlough_long, aes(x = department, y = Percent, fill = Status)) +
     plot.caption = element_text(family = "Montserrat", size = 8, face = "italic"),
     legend.position = "top",
     legend.box = "horizontal",
-    legend.text = element_text(size = 6, family = "Montserrat", face = "plain"), #the margin brings the text and dot closer
+    legend.text = element_text(size = 6, family = "Montserrat", face = "plain"),
     panel.grid.major = element_blank(),
     panel.grid.minor.x = element_blank()
   ) 
