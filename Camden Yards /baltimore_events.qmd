@@ -1,0 +1,75 @@
+---
+title: "baltimore events"
+format: html
+editor: visual
+---
+
+## 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+# Read in your dataset
+events <- read_csv("events.csv")
+
+# Reshape to long format (keep original column names)
+events_long <- events |>
+  pivot_longer(
+    cols = c(`Baltimore Convention Center event`, `Orioles home game`, `Ravens home game`),
+    names_to = "venue",
+    values_to = "event"
+  )
+
+# Ensure date is a Date type
+events_long$Date <- as.Date(events_long$Date)
+
+# Assign colors for each "yes" by venue, gray if "no"
+events_long <- events_long |>
+  mutate(
+    color = case_when(
+      event == "yes" & venue == "Baltimore Convention Center event" ~ "#1E90FF",  # blue
+      event == "yes" & venue == "Orioles home game" ~ "#FF7F00",                  # orange
+      event == "yes" & venue == "Ravens home game" ~ "#800080",                   # purple
+      TRUE ~ "white"
+    )
+  )
+
+# Plot the heat map
+ggplot(events_long, aes(x = Date, y = venue, fill = color)) +
+  geom_tile(color = "white") +
+  scale_fill_identity() +
+  labs(
+    title = "Event Days by Venue (2024)",
+    x = "Date",
+    y = "Venue"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(face = "bold")
+  )
+```
+
+
+```{r}
+write_csv(events_long, "events_long.csv")
+```
+
+```{r}
+events <- events |>
+  mutate(
+    all_vacant = if_all(
+      c(`Baltimore Convention Center event`, `Orioles home game`, `Ravens home game`),
+      ~ .x == "no"
+    )
+  )
+
+events |>
+  filter(all_vacant == "TRUE") |> 
+  summarize(count = n())
+```
+
+
+
