@@ -9,6 +9,9 @@ editor: visual
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(showtext)
+font_add_google("Montserrat", "montserrat")
+showtext_auto()
 
 # Read in your dataset
 events <- read_csv("events.csv")
@@ -44,14 +47,19 @@ ggplot(events_long, aes(x = Date, y = venue, fill = color)) +
     x = "Date",
     y = "Venue"
   ) +
-  theme_minimal() +
   theme(
     panel.grid = element_blank(),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(face = "bold")
+    axis.text.y = element_text(face = "bold"), 
+    legend.text = element_text(family = "montserrat"), 
+    legend.title = element_text(family = "montserrat"),
   )
 ```
 
+```{r}
+# Save as SVG
+ggsave("heatmap.svg", plot = heatmap, width = 8, height = 6, dpi = 300, device = "svg")
+```
 
 ```{r}
 write_csv(events_long, "events_long.csv")
@@ -70,6 +78,3 @@ events |>
   filter(all_vacant == "TRUE") |> 
   summarize(count = n())
 ```
-
-
-
