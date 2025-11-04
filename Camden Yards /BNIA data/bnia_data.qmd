@@ -7,7 +7,19 @@ editor: visual
 ```{r}
 library(tidyverse)
 library(janitor)
+library(lubridate)
+library(cowplot)
+library(paletteer)
+library(ggalt)
+library(ggrepel)
+library(dplyr)
+library(paletteer)
+library(showtext)
+font_add_google("Montserrat")
+showtext_auto()
 ```
+
+###Loading BNIA data
 
 ```{r}
 crime <- read_csv("crime_table.csv") |> 
@@ -18,7 +30,8 @@ crime <- read_csv("crime_table.csv") |>
     "Downtown/Seton Hill",
     "Poppleton/The Terraces/Hollins Market",
     "Pigtown/Carroll Park",
-    "Fells Point"
+    "Fells Point",
+    "Harbor East/Little Italy"
   ))
 
 biz_per_1000 <- read_csv("business_per_thousand.csv") |> clean_names() |> 
@@ -28,8 +41,10 @@ biz_per_1000 <- read_csv("business_per_thousand.csv") |> clean_names() |>
     "Downtown/Seton Hill",
     "Poppleton/The Terraces/Hollins Market",
     "Pigtown/Carroll Park",
-    "Fells Point"
-  ))
+    "Fells Point",
+    "Harbor East/Little Italy"
+  )) |> 
+  mutate(pct_change = ((x2023 - x2010) / x2010) * 100)
 
 four_year_biz <- read_csv("four_yr_business.csv") |> clean_names() |> 
     filter(community_statistical_area_2020 %in% c(
@@ -38,7 +53,8 @@ four_year_biz <- read_csv("four_yr_business.csv") |> clean_names() |>
     "Downtown/Seton Hill",
     "Poppleton/The Terraces/Hollins Market",
     "Pigtown/Carroll Park",
-    "Fells Point"
+    "Fells Point",
+    "Harbor East/Little Italy"
   ))
 
 small_biz_invest <- read_csv("small_biz_investment.csv") |> clean_names() |> 
@@ -48,7 +64,8 @@ small_biz_invest <- read_csv("small_biz_investment.csv") |> clean_names() |>
     "Downtown/Seton Hill",
     "Poppleton/The Terraces/Hollins Market",
     "Pigtown/Carroll Park",
-    "Fells Point"
+    "Fells Point",
+    "Harbor East/Little Italy"
   ))
 
 total_jobs <- read_csv("total_jobs_table.csv") |> clean_names() |> 
@@ -58,29 +75,266 @@ total_jobs <- read_csv("total_jobs_table.csv") |> clean_names() |>
     "Downtown/Seton Hill",
     "Poppleton/The Terraces/Hollins Market",
     "Pigtown/Carroll Park",
-    "Fells Point"
-  ))
+    "Fells Point",
+    "Harbor East/Little Italy"
+  )) |> 
+  mutate(pct_change = ((x2022 - x2010) / x2010) * 100)
+
+```
+
+###BNIA data longer
+
+```{r}
+biz_1000_longer <- biz_per_1000 |>
+  pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "year",
+    values_to = "biz_per_1000"
+  ) |>
+  mutate(
+    year = as.numeric(str_remove(year, "^x"))  
+  )
+
+four_year_biz_longer <- four_year_biz |> pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "year",
+    values_to = "new_biz"
+  ) |>
+  mutate(
+    year = as.numeric(str_remove(year, "^x"))  
+  )
+
+small_biz_invest_longer <- small_biz_invest |> pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "year",
+    values_to = "small_biz_investment"
+  ) |>
+  mutate(
+    year = as.numeric(str_remove(year, "^x"))  
+  )
+
+total_jobs_longer <- total_jobs |> pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "year",
+    values_to = "total_jobs"
+  ) |>
+  mutate(
+    year = as.numeric(str_remove(year, "^x"))  
+  )
+```
+
+###Total jobs chart
+
+```{r}
+ggplot() + 
+  geom_step(data=total_jobs_longer, aes(x=year, y=total_jobs, group=community_statistical_area_2020, color=community_statistical_area_2020)) +
+  labs(
+    title = "Total Jobs in Baltimore Neighborhoods",
+    x = "",
+    y = "Total Jobs",
+    color = "Neighborhood",
+    caption = "Source: BNIA | Chart by Matt Cohen"
+  ) +
+  theme_minimal()
+```
+
+###New biz in 4 years chart
+
+```{r}
+ggplot(four_year_biz_longer,
+       aes(x = community_statistical_area_2020,
+           y = new_biz,
+           fill = as.factor(year),
+           group = as.factor(year),
+           color)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_paletteer_d("colorBlindness::Blue2DarkOrange18Steps") +
+  labs(title = "Downtown Baltimore is seeing fewer new businesses since 2011",
+       x = "",
+       y = "New businesses in the last four years",
+       caption = "Source: BNIA | Chart by Matt Cohen",
+       fill = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+###Small biz investment chart
+
+```{r}
+small_biz_invest_longer |>
+ ggplot(aes(x = year,
+           y = small_biz_investment,
+           color = community_statistical_area_2020)) +
+  geom_line() +
+  labs(title = "Small business investment declines in dowwntown Baltimore",
+       x = "",
+       y = "Small Business Investment ($)",
+       caption = "Source: BNIA | Chart by Matt Cohen",
+       fill = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+###Biz per 1000 chart
+
+```{r}
+ggplot(biz_1000_longer,
+       aes(x = year,
+           y = biz_per_1000,
+           color = community_statistical_area_2020)) +
+  geom_line() +
+  labs(title = "Businesses per 1,000 Residents in Downtown Baltimore Area",
+       x = "",
+       y = "Businesses per 1,000 Residents",
+       caption = "Source: BNIA | Chart by Matt Cohen",
+       fill = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+###Zillow data
+
+```{r}
+zillow_data <- read_csv("zillow_zip_data.csv") |> rename(zip_code = RegionName) |> clean_names() |> mutate(city = if_else(city == "Vinings", "Atlanta", city)) 
+```
+
+```{r}
+zillow_long <- zillow_data |>
+  pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "date_raw",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    date = mdy(str_remove(date_raw, "^x")),
+    median_price = as.numeric(median_price)
+  ) |>
+  select(region_id, zip_code, state, city, date, median_price)
+
+zillow_long <- zillow_long |>
+  mutate(median_price = as.numeric(median_price)) |>
+  group_by(zip_code) |>
+  arrange(zip_code, date) |>
+  mutate(
+    initial_price = median_price[which.min(date)],  
+    pct_change = (median_price - initial_price) / initial_price * 100
+  ) |>
+  ungroup()
+```
+
+###Filtering for stadium zips
+
+```{r}
+stadium_neighborhoods <- zillow_data |>
+  filter(zip_code == 21201 | zip_code == 60613 | zip_code == 20003 | region_id == 58695 | zip_code == 33125 | zip_code == 30339 | zip_code == 15212 | zip_code == 11368 | zip_code == 10451 | zip_code == 19148 | zip_code == 33705 | zip_code == 77002 | zip_code == 76011 | zip_code == 48201 | zip_code == 44115 | zip_code == 45202 | zip_code == 60616 | zip_code == 53214 | zip_code == 63102 | zip_code == 64129 | zip_code == 55403 | zip_code == 80205 | zip_code == 85004 | zip_code == 92101 | zip_code == 90012 | zip_code == 92806 | zip_code == 94107 | zip_code == 94621 | zip_code == 98134) 
+
+stadium_long <- stadium_neighborhoods |>
+  pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "date_raw",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    date = mdy(str_remove(date_raw, "^x")),
+    median_price = as.numeric(median_price)
+  ) |>
+  select(region_id, zip_code, state, city, date, median_price)  
+  
+stadium_long <- stadium_long |>
+  mutate(median_price = as.numeric(median_price)) |>
+  group_by(zip_code) |>
+  arrange(zip_code, date) |>
+  mutate(
+    initial_price = median_price[which.min(date)],  
+    pct_change = (median_price - initial_price) / initial_price * 100
+  ) |>
+  ungroup()
+
+write.csv(stadium_neighborhoods, "stadium_neighborhoods.csv", row.names = FALSE)
+write.csv(stadium_long, "stadium_long.csv", row.names = FALSE)
+```
+
+###Median household line chart
+
+```{r}
+stadium_long |>
+  mutate(highlight = ifelse(city == "Baltimore", "Highlighted", "Other")) |>
+  ggplot(aes(x = date, y = pct_change, group = city)) +
+  geom_line(
+    data = stadium_long |> filter(city != "Baltimore"),
+    color = "gray80",
+    size = 1
+  ) +
+  geom_line(
+    data = stadium_long |> filter(city == "Baltimore"),
+    color = "#FF8C00",
+    size = 1
+  ) +
+  scale_color_manual(
+    values = c("Highlighted" = "#FF8C00", "Other" = "gray80"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Baltimore hasn't had the same home price bump as other baseball neighborhoods",
+    subtitle = str_wrap(
+    "In home sales data in the same zip code as a MLB stadium since 2000, Baltimore's rate of median price growth lags far behind much of the league. But it has exceeded the rate of other small market cities.",
+    width = 100   # tweak this number until the wrapping looks right
+  ),
+    caption = "Source: Zillow sales data | Chart by Matt Cohen",
+    x = "",
+    y = "Median price (in hundreds of thousands)"
+  ) +
+   geom_text(
+    data = stadium_long |> filter(city == "Baltimore") |> slice_tail(n = 1),
+    aes(label = city),
+    hjust = -0.1,             
+    vjust = 0.5,
+    color = "#FF8C00",
+    family = "Montserrat",
+    size = 10
+  ) +
+  xlim(min(stadium_long$date), max(stadium_long$date) + 500) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(5.5, 80, 5.5, 5.5),
+        plot.title = element_text(size = 36, family = "Montserrat", face = "bold"),
+        plot.caption = element_text(size = 20, family = "Montserrat"),
+        axis.title = element_text(size = 22, family = "Montserrat"),
+        axis.text = element_text(size = 20, family = "Montserrat"),
+        plot.subtitle = element_text(size = 27, family = "Montserrat", lineheight = 0.3),
+        
+        )
+```
+s
+```{r}
+ggsave("homeslinechart.png", plot = last_plot(), width = 8, height = 6, dpi = 300)
 ```
 
 
 
+###Dumbell chart median prices
 
+```{r}
+ggplot() +
+  geom_dumbbell(
+    data = stadium_neighborhoods,
+    aes(y=city, x= x1_31_00, xend= x9_30_25),
+    colour = "grey",
+    colour_x = "red",
+    colour_xend = "green"
+  ) +
+  labs(
+    title = "Change in Median Home Prices from Jan 2000 to Sep 2025",
+    x = "Median Home Price (USD)",
+    y = "City"
+  ) +
+  theme_minimal() 
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+stadium_neighborhoods |> 
+  select(city, x1_31_00, x9_30_25) |> 
+  mutate(increase = x9_30_25 - x1_31_00,
+         pct_increase = (increase / x1_31_00) * 100) |> 
+  arrange(desc(increase))
+```

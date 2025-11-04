@@ -1,0 +1,50 @@
+---
+title: "camden yards economic impact"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+econ_impact <- read_csv("camdenyardseconomics.csv")
+```
+
+```{r}
+econ_impact |> 
+  ggplot(aes(x = Season, y = `Direct Spending`)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Direct Spending at Camden Yards Over Time",
+    x = "Year",
+    y = "Direct Spending (in millions)"
+  ) +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

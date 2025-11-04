@@ -1,0 +1,118 @@
+---
+title: "zillowdata"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(ggalt)
+library(ggrepel)
+```
+
+```{r}
+zillow_data <- read_csv("zillow_zip_data.csv") |> rename(zip_code = RegionName) |> clean_names() |> mutate(city = if_else(city == "Vinings", "Atlanta", city)) 
+```
+
+```{r}
+zillow_long <- zillow_data |>
+  pivot_longer(
+    cols = starts_with("x"),          # all those x1_31_00-style columns
+    names_to = "date_raw",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    # remove "x" prefix and convert to real date
+    date = mdy(str_remove(date_raw, "^x")),
+    median_price = as.numeric(median_price)
+  ) |>
+  select(region_id, zip_code, state, city, date, median_price)
+
+
+library(dplyr)
+
+zillow_long <- zillow_long |>
+  mutate(median_price = as.numeric(median_price)) |>
+  group_by(zip_code) |>
+  arrange(zip_code, date) |>
+  mutate(
+    initial_price = median_price[which.min(date)],  # find earliest observation per zip
+    pct_change = (median_price - initial_price) / initial_price * 100
+  ) |>
+  ungroup()
+```
+
+```{r}
+stadium_neighborhoods <- zillow_data |>
+  filter(zip_code == 21201 | zip_code == 60613 | zip_code == 20003 | region_id == 58695 | zip_code == 33125 | zip_code == 30339 | zip_code == 15212 | zip_code == 11368 | zip_code == 14015 | zip_code == 19148 | zip_code == 33705 | zip_code == 77002 | zip_code == 76011 | zip_code == 48201 | zip_code == 44115 | zip_code == 45202 | zip_code == 60616 | zip_code == 53214 | zip_code == 63102 | zip_code == 64129 | zip_code == 55403 | zip_code == 80205 | zip_code == 85004 | zip_code == 92101 | zip_code == 90012 | zip_code == 92806 | zip_code == 94107 | zip_code == 94621 | zip_code == 98134) 
+
+stadium_long <- stadium_neighborhoods |>
+  pivot_longer(
+    cols = starts_with("x"),          
+    names_to = "date_raw",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    date = mdy(str_remove(date_raw, "^x")),
+    median_price = as.numeric(median_price)
+  ) |>
+  select(region_id, zip_code, state, city, date, median_price)  
+  
+stadium_long <- stadium_long |>
+  mutate(median_price = as.numeric(median_price)) |>
+  group_by(zip_code) |>
+  arrange(zip_code, date) |>
+  mutate(
+    initial_price = median_price[which.min(date)],  
+    pct_change = (median_price - initial_price) / initial_price * 100
+  ) |>
+  ungroup()
+```
+
+```{r}
+stadium_long |>
+  mutate(highlight = ifelse(city == "Baltimore", "Highlighted", "Other")) |>
+  ggplot(aes(x = date, y = pct_change, group = city)) +
+  geom_line(
+    data = stadium_long |> filter(city != "Baltimore"),
+    color = "gray80",
+    size = 1
+  ) +
+  geom_line(
+    data = stadium_long |> filter(city == "Baltimore"),
+    color = "#FF8C00",
+    size = 1
+  ) +
+  scale_color_manual(
+    values = c("Highlighted" = "#FF8C00", "Other" = "gray80"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Median home prices in baseball stadium zip codes",
+    caption = "Source: Zillow sales data | Chart by Matt Cohen",
+    x = "",
+    y = "Median Home Price (USD)"
+  ) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(5.5, 40, 5.5, 5.5))
+```
+
+```{r}
+ggplot() +
+  geom_dumbbell(
+    data = stadium_neighborhoods,
+    aes(y=city, x= x1_31_00, xend= x9_30_25),
+    colour = "grey",
+    colour_x = "red",
+    colour_xend = "green"
+  ) +
+  labs(
+    title = "Change in Median Home Prices from Jan 2000 to Sep 2025",
+    x = "Median Home Price (USD)",
+    y = "City"
+  ) +
+  theme_minimal() 
+```
