@@ -14,7 +14,7 @@ font_add_google("Poppins", "poppins")
 showtext_auto()
 
 # Read data
-events <- read_csv("events.csv")
+events <- read_csv("https://raw.githubusercontent.com/mdcohen99/CNS-Data/refs/heads/main/Camden%20Yards%20/events.csv")
 
 # Long format
 events_long <- events %>%
@@ -82,4 +82,6 @@ events <- events |>
 events |>
   filter(all_vacant == "TRUE") |> 
   summarize(count = n())
+
+write_csv(events, "events.csv")
 ```
