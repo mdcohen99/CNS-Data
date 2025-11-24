@@ -10,54 +10,59 @@ editor: visual
 library(tidyverse)
 library(lubridate)
 library(showtext)
-font_add_google("Montserrat", "montserrat")
+font_add_google("Poppins", "poppins")
 showtext_auto()
 
-# Read in your dataset
+# Read data
 events <- read_csv("events.csv")
 
-# Reshape to long format (keep original column names)
-events_long <- events |>
+# Long format
+events_long <- events %>%
   pivot_longer(
     cols = c(`Baltimore Convention Center event`, `Orioles home game`, `Ravens home game`),
     names_to = "venue",
     values_to = "event"
-  )
-
-# Ensure date is a Date type
-events_long$Date <- as.Date(events_long$Date)
-
-# Assign colors for each "yes" by venue, gray if "no"
-events_long <- events_long |>
+  ) %>%
   mutate(
-    color = case_when(
-      event == "yes" & venue == "Baltimore Convention Center event" ~ "#1E90FF",  # blue
-      event == "yes" & venue == "Orioles home game" ~ "#FF7F00",                  # orange
-      event == "yes" & venue == "Ravens home game" ~ "#800080",                   # purple
-      TRUE ~ "white"
-    )
+    Date = as.Date(Date),
+    # create a categorical fill: venue name when there is an event, otherwise "None"
+    fill = if_else(event == "yes", venue, "None")
   )
 
-# Plot the heat map
-ggplot(events_long, aes(x = Date, y = venue, fill = color)) +
-  geom_tile(color = "white") +
-  scale_fill_identity() +
+# define colors for categories (including a "None" color)
+fill_colors <- c(
+  "Baltimore Convention Center event" = "#1E90FF",
+  "Orioles home game" = "#FF7F00",
+  "Ravens home game" = "#800080",
+  "None" = "white"
+)
+
+# build the plot and save into an object
+ggplot(events_long, aes(x = Date, y = venue, fill = fill)) +
+  # set width to 1 day so tiles look like daily blocks; set height so rows are readable
+  geom_tile(width = 1, height = 0.8, color = "gray90") +
+  scale_fill_manual(
+    name = "Event",
+    values = fill_colors,
+    breaks = c("Baltimore Convention Center event", "Orioles home game", "Ravens home game"),
+    labels = c("Convention Center", "Orioles game", "Ravens game")
+  ) +
   labs(
     title = "Event Days by Venue (2024)",
     x = "Date",
     y = "Venue"
   ) +
+  theme_minimal(base_family = "poppins") +
   theme(
     panel.grid = element_blank(),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(face = "bold"), 
-    legend.text = element_text(family = "montserrat"), 
-    legend.title = element_text(family = "montserrat"),
+    axis.text.y = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10)
   )
 ```
 
 ```{r}
-# Save as SVG
 ggsave("heatmap.svg", plot = heatmap, width = 8, height = 6, dpi = 300, device = "svg")
 ```
 

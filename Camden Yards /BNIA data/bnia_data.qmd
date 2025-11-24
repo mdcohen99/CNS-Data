@@ -17,6 +17,7 @@ library(paletteer)
 library(showtext)
 font_add_google("Montserrat")
 showtext_auto()
+library(svglite)
 ```
 
 ###Loading BNIA data
@@ -278,11 +279,11 @@ stadium_long |>
     title = "Baltimore hasn't had the same home price bump as other baseball neighborhoods",
     subtitle = str_wrap(
     "In home sales data in the same zip code as a MLB stadium since 2000, Baltimore's rate of median price growth lags far behind much of the league. But it has exceeded the rate of other small market cities.",
-    width = 100   # tweak this number until the wrapping looks right
+    width = 100   
   ),
     caption = "Source: Zillow sales data | Chart by Matt Cohen",
     x = "",
-    y = "Median price (in hundreds of thousands)"
+    y = "Percent change in median home price since 2000"
   ) +
    geom_text(
     data = stadium_long |> filter(city == "Baltimore") |> slice_tail(n = 1),
@@ -290,27 +291,21 @@ stadium_long |>
     hjust = -0.1,             
     vjust = 0.5,
     color = "#FF8C00",
-    family = "Montserrat",
-    size = 10
+    size = 4  # Changed from 10
   ) +
   xlim(min(stadium_long$date), max(stadium_long$date) + 500) +
   theme_minimal() +
   coord_cartesian(clip = "off") +
   theme(plot.margin = margin(5.5, 80, 5.5, 5.5),
-        plot.title = element_text(size = 36, family = "Montserrat", face = "bold"),
-        plot.caption = element_text(size = 20, family = "Montserrat"),
-        axis.title = element_text(size = 22, family = "Montserrat"),
-        axis.text = element_text(size = 20, family = "Montserrat"),
-        plot.subtitle = element_text(size = 27, family = "Montserrat", lineheight = 0.3),
-        
-        )
-```
-s
-```{r}
-ggsave("homeslinechart.png", plot = last_plot(), width = 8, height = 6, dpi = 300)
-```
+        plot.title = element_text(size = 16, face = "bold"),      # Changed from 36
+        plot.caption = element_text(size = 9),                     # Changed from 20
+        axis.title = element_text(size = 11),                      # Changed from 22
+        axis.text = element_text(size = 10),                       # Changed from 20
+        plot.subtitle = element_text(size = 11, lineheight = 1.2) # Changed from 27
+  )
 
-
+ggsave("homeslinechart.svg", width = 8, height = 6)
+```
 
 ###Dumbell chart median prices
 
