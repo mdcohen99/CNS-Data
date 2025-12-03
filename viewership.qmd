@@ -1,0 +1,90 @@
+---
+title: "viewership"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(googlesheets4)
+```
+
+```{r}
+sheet_url <- "https://docs.google.com/spreadsheets/d/1WMA57xEdIjt6KxCQLeTaZe_CIYXcyOW0NnqKxB2ORhE/edit?usp=sharing"
+
+gs4_deauth()
+
+viewership <- read_sheet(sheet_url)
+
+if ("Viewership" %in% names(viewership) && is.character(viewership$Viewership)) {
+viewership$Viewership <- as.numeric(gsub(",", "", viewership$Viewership))
+}
+```
+
+```{r}
+team_viewership <- viewership |> 
+  group_by(Teams)  |> 
+  summarize(Total_Viewership = sum(Viewership, na.rm = TRUE))  |> 
+  arrange(desc(Total_Viewership))
+
+team_viewership |>
+  filter(Total_Viewership > 18409000) |>
+  ggplot(aes(x = reorder(Teams, Total_Viewership), y = Total_Viewership)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Total Viewership by Team",
+       x = "Teams",
+       y = "Total Viewership") +
+  theme_minimal()
+
+conference_viewership <- viewership |> 
+  group_by(Conference)  |> 
+  summarize(Total_Viewership = sum(Viewership, na.rm = TRUE))  |> 
+  arrange(desc(Total_Viewership))
+  
+conference_viewership |> 
+  ggplot(aes(x = reorder(Conference, Total_Viewership), y = Total_Viewership)) +
+  geom_bar(stat = "identity", fill = "darkorange") +
+  coord_flip() +
+  labs(title = "Total Viewership by Conference",
+       x = "Conference",
+       y = "Total Viewership") +
+  theme_minimal()
+
+network_viewership <- viewership |> 
+  group_by(Channel)  |> 
+  summarize(Total_Viewership = sum(Viewership, na.rm = TRUE))  |> 
+  arrange(desc(Total_Viewership))
+
+network_viewership |> 
+  ggplot(aes(x = reorder(Channel, Total_Viewership), y = Total_Viewership)) +
+  geom_bar(stat = "identity", fill = "forestgreen") +
+  coord_flip() +
+  labs(title = "Total Viewership by Network",
+       x = "Network",
+       y = "Total Viewership") +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -128,7 +128,7 @@ total_jobs_longer <- total_jobs |> pivot_longer(
 
 ```{r}
 ggplot() + 
-  geom_step(data=total_jobs_longer, aes(x=year, y=total_jobs, group=community_statistical_area_2020, color=community_statistical_area_2020)) +
+  geom_line(data=total_jobs_longer, aes(x=year, y=total_jobs, group=community_statistical_area_2020, color=community_statistical_area_2020)) +
   labs(
     title = "Total Jobs in Baltimore Neighborhoods",
     x = "",
@@ -333,3 +333,13 @@ stadium_neighborhoods |>
          pct_increase = (increase / x1_31_00) * 100) |> 
   arrange(desc(increase))
 ```
+
+
+
+
+
+
+
+
+
+
