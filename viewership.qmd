@@ -66,6 +66,34 @@ network_viewership |>
   theme_minimal()
 ```
 
+```{r}
+# Convert to wide format
+view_wide <- viewership  |> 
+  # Select relevant columns
+  select(Week, Teams, Viewership)  |> 
+  # Pivot wider so weeks become columns
+  pivot_wider(
+    names_from = Week,
+    values_from = Viewership,
+    names_prefix = ""  # You can add a prefix like "Week_" if desired
+  ) 
+
+week_cols <- grep("^Week", names(view_wide), value = TRUE)
+week_cols_sorted <- week_cols[order(as.numeric(gsub("Week ", "", week_cols)))]
+
+view_wide <- view_wide %>%
+  select(Teams, all_of(week_cols_sorted)) %>%
+  rowwise() %>%
+  mutate(
+    Total_Viewership = sum(c_across(starts_with("Week")), na.rm = TRUE),
+    Average_Per_Week = mean(c_across(starts_with("Week")), na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  arrange(desc(Total_Viewership))
+
+
+write.csv(view_wide, "view_wide.csv", row.names = FALSE)
+```
 
 
 
